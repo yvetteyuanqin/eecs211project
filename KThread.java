@@ -56,16 +56,11 @@ public class KThread {
 	public KThread() {
 		if (currentThread != null) {
 			tcb = new TCB();
-			isFinished = new Condition(joinlock);
 		}
 		else {
 			readyQueue = ThreadedKernel.scheduler.newThreadQueue(false);
 			readyQueue.acquire(this);
-			//joinfunction
 			joinQueue = ThreadedKernel.scheduler.newThreadQueue(false);
-			isFinished = new Condition(joinlock);
-			joinQueue.acquire(this);
-			
 			currentThread = this;
 			tcb = TCB.currentTCB();
 			name = "main";
@@ -290,16 +285,17 @@ public class KThread {
 
 		Lib.assertTrue(this != currentThread);
 		
-		joinlock.acquire();
-		if(status ==statusFinished) {joinlock.release();}
-		else {
+		if(this.status != statusFinished) {
 			boolean intStatus = Machine.interrupt().disable();
-			this.joinQueue.waitForAccess(currentThread);
+//			currentThread.ready();
+//			this.run();
+//			runNextThread();
+//			currentThread.yield();	
+			joinQueue.waitForAccess(this);
+			currentThread.sleep();
 			Machine.interrupt().restore(intStatus);
-			isFinished.sleep();
-			joinlock.release();
-		}
-		
+	
+		} else return;
 		
 	}
 
@@ -503,11 +499,9 @@ public class KThread {
 
 	/** Number of times the KThread constructor was called. */
 	private static int numCreated = 0;
-	//for join function
+
 	private static ThreadQueue readyQueue = null;
-	private static Lock joinlock = new Lock();
-	private Condition isFinished;
-	
+
 	private static ThreadQueue joinQueue = null;
 	
 	private static KThread currentThread = null;
