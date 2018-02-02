@@ -56,11 +56,16 @@ public class KThread {
 	public KThread() {
 		if (currentThread != null) {
 			tcb = new TCB();
+			isFinished = new Condition(joinlock);
 		}
 		else {
 			readyQueue = ThreadedKernel.scheduler.newThreadQueue(false);
 			readyQueue.acquire(this);
-
+			//joinfunction
+			joinQueue = ThreadedKernel.scheduler.newThreadQueue(false);
+			isFinished = new Condition(joinlock);
+			joinQueue.acquire(this);
+			
 			currentThread = this;
 			tcb = TCB.currentTCB();
 			name = "main";
@@ -284,18 +289,17 @@ public class KThread {
 		Lib.debug(dbgThread, "Joining to thread: " + toString());
 
 		Lib.assertTrue(this != currentThread);
-
-		if(this.status != statusFinished) {
+		
+		joinlock.acquire();
+		if(status ==statusFinished) {joinlock.release();}
+		else {
 			boolean intStatus = Machine.interrupt().disable();
-//			currentThread.ready();
-//			this.run();
-//			runNextThread();
-
-			currentThread.yield();	
-
+			this.joinQueue.waitForAccess(currentThread);
 			Machine.interrupt().restore(intStatus);
-	
-		} 
+			isFinished.sleep();
+			joinlock.release();
+		}
+		
 		
 	}
 
@@ -418,7 +422,27 @@ public class KThread {
 
 		private int which;
 	}
-
+	
+	/**
+	 * Joiner and Joinee class
+	 */
+	private static class Joinee implements Runnable {
+		public void run() {
+			System.out.println("Joinee thread running");			
+		}	
+	}
+	private static class Joiner implements Runnable {
+		private KThread joinee;
+		Joiner(KThread joinee){
+			this.joinee = joinee;
+		}
+		public void run() {
+			System.out.println("before join() "+currentThread.getName()+" running");
+			joinee.join();
+			System.out.println("after joinee joined and finished");
+			System.out.println("Joiner:after joining"+currentThread.getName());
+		}	
+	}
 	/**
 	 * Tests whether this module is working.
 	 */
@@ -426,12 +450,17 @@ public class KThread {
 		Lib.debug(dbgThread, "Enter KThread.selfTest");
 
 		//new KThread(new PingTest(1)).setName("forked thread").fork();
-		KThread joiner1 = new KThread(new PingTest(1)).setName("joiner thread");
-		joiner1.fork();
-		joiner1.join();
+		//new PingTest(0).run();
+		
+		/*test Joinee*/
+		KThread joineeThread = new KThread(new Joinee()).setName("\t --Joinee thread");
+//		KThread joinerThread = new KThread(new Joiner(joineeThread)).setName("\t --Joiner thread");
+		System.out.println("\n--Case1: x joins y and x runs first--");
+//		joinerThread.fork();
+		joineeThread.fork();
 
 		
-		new PingTest(0).run();
+		new Joiner(joineeThread).run();
 	}
 
 	private static final char dbgThread = 't';
@@ -474,9 +503,13 @@ public class KThread {
 
 	/** Number of times the KThread constructor was called. */
 	private static int numCreated = 0;
-
+	//for join function
 	private static ThreadQueue readyQueue = null;
-
+	private static Lock joinlock = new Lock();
+	private Condition isFinished;
+	
+	private static ThreadQueue joinQueue = null;
+	
 	private static KThread currentThread = null;
 
 	private static KThread toBeDestroyed = null;
