@@ -287,15 +287,12 @@ public class KThread {
 		
 		if(this.status != statusFinished) {
 			boolean intStatus = Machine.interrupt().disable();
-//			currentThread.ready();
-//			this.run();
-//			runNextThread();
-//			currentThread.yield();	
 			joinQueue.waitForAccess(this);
 			currentThread.sleep();
 			Machine.interrupt().restore(intStatus);
 	
-		} else return;
+		} 
+		return;
 		
 	}
 
