@@ -287,8 +287,9 @@ public class KThread {
 		
 		if(this.status != statusFinished) {
 			boolean intStatus = Machine.interrupt().disable();
-			joinQueue.waitForAccess(this);
-			currentThread.sleep();
+			
+			readyQueue.waitForAccess(this);
+			readyQueue.nextThread();
 			Machine.interrupt().restore(intStatus);
 	
 		} 
