@@ -202,7 +202,15 @@ public class KThread {
 		toBeDestroyed = currentThread;
 
 		currentThread.status = statusFinished;
-
+		
+		if (currentThread.jointhrd != null){
+			
+			currentThread.jointhrd.ready();
+			//remove current thread from joinQueue.
+			
+			
+		}
+		
 		sleep();
 	}
 
@@ -287,13 +295,16 @@ public class KThread {
 		
 		if(this.status != statusFinished) {
 			boolean intStatus = Machine.interrupt().disable();
+			this.jointhrd = currentThread; 
 			
-			readyQueue.waitForAccess(this);
-			readyQueue.nextThread();
+			
+			joinQueue.acquire(currentThread);
+			joinQueue.waitForAccess(currentThread); //putting currentthread into joinQueue
+		
+			KThread.sleep();
 			Machine.interrupt().restore(intStatus);
 	
-		} 
-		return;
+		} else return;
 		
 	}
 
@@ -507,4 +518,6 @@ public class KThread {
 	private static KThread toBeDestroyed = null;
 
 	private static KThread idleThread = null;
+
+	private KThread jointhrd = null;
 }
