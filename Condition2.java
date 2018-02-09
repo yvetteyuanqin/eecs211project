@@ -52,7 +52,7 @@ public class Condition2 {
 		Lib.assertTrue(conditionLock.isHeldByCurrentThread());
 		
 		KThread p = waitingQueue.nextThread();
-		p.ready();
+		if (p != null) p.ready();
 		
 	}
 
