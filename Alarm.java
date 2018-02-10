@@ -3,13 +3,9 @@ package nachos.threads;
 <<<<<<< HEAD
 import java.util.*;
 
-=======
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Map.Entry;
->>>>>>> a5905efb7c15e7ecdf9d5026cf14d264d3273789
+
+
+
 import nachos.machine.*;
 
 /**
