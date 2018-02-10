@@ -1,11 +1,10 @@
 package nachos.threads;
 
-<<<<<<< HEAD
-import java.util.*;
-
-
-
-
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.Map.Entry;
 import nachos.machine.*;
 
 /**
@@ -21,10 +20,11 @@ public class Alarm {
 	 * <b>Note</b>: Nachos will not function correctly with more than one alarm.
 	 */
 	public Alarm() {
+
 		Machine.timer().setInterruptHandler(new Runnable() {
 			public void run() {
 				timerInterrupt();
-			}			
+			}
 		});
 		
 	}
@@ -36,13 +36,14 @@ public class Alarm {
 	 * should be run.
 	 */
 	public void timerInterrupt() {
-		boolean inStatus=Machine.interrupt().disable();
-
-		while(!waitQueue.isEmpty()&&waitQueue.peek().waketime<=Machine.timer().getTime()){
-			waitQueue.poll().thread.ready();
+		
+		if (waitlist.isEmpty()) return;
+		Map.Entry<KThread, Long> p = waitlist.getFirst();
+		if(p != null){
+			if(p.getValue() != null  ) 
+				waitlist.removeFirst();
+				p.getKey().ready();
 		}
-		KThread.yield();
-		Machine.interrupt().restore(inStatus);
 		
 	}
 
@@ -61,32 +62,24 @@ public class Alarm {
 	public void waitUntil(long x) {
 		// for now, cheat just to get something working (busy waiting is bad)
 		long wakeTime = Machine.timer().getTime() + x;
-//		while (wakeTime > Machine.timer().getTime())
-//			KThread.yield();
-		Waitthrd newwaitthrd = new Waitthrd(KThread.currentThread(), wakeTime);
-		//waitQueue.waitForAccess(KThread.currentThread());
-		boolean inStatus=Machine.interrupt().disable();
-		waitQueue.add(newwaitthrd);
-		KThread.currentThread().sleep();
-		Machine.interrupt().restore(inStatus);	
-			
+
+		boolean intStatus = Machine.interrupt().disable();
+		waitmap.put(KThread.currentThread(), wakeTime);
+		waitlist.sort( new Comparator<Map.Entry<KThread, Long>>() {
+
+			@Override
+			public int compare(Entry<KThread, Long> o1, Entry<KThread, Long> o2) {
+				// TODO Auto-generated method stub
+				return (o1.getValue()).compareTo( o2.getValue() ) ;
+			}
+	    });
+		KThread.sleep();
+
+		Machine.interrupt().restore(intStatus);
+		
+	}
 	
-	}
-	private class Waitthrd implements Comparable<Waitthrd>{
-		KThread thread;
-		long waketime;
-		public Waitthrd(KThread thread, long waketime) {
-			this.thread = thread;
-			this.waketime = waketime;
-		}
-		public int compareTo(Waitthrd thread){
-			if(this.waketime<thread.waketime)return -1;
-			else if(this.waketime>thread.waketime)return 1;
-			else return 0;
-
-		}
-	}
-
-
-	private PriorityQueue<Waitthrd> waitQueue=new PriorityQueue<Waitthrd>();
+	
+	private Map<KThread, Long> waitmap = new HashMap<KThread, Long >(); 
+	private LinkedList<Map.Entry<KThread, Long>> waitlist = new LinkedList<Map.Entry<KThread, Long>>();
 }
