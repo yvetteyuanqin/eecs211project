@@ -41,14 +41,11 @@ public class Alarm {
 
 		boolean intStatus = Machine.interrupt().disable();
 
-		if (waitlist.isEmpty()) return;
-		Map.Entry<KThread, Long> p = waitlist.getFirst();
-			if(p.getValue() < Machine.timer().getTime() ){
+		while (!waitlist.isEmpty() && waitlist.getFirst().getValue() < Machine.timer().getTime()){
+        waitlist.getFirst().getKey().ready();
 				waitlist.removeFirst();
-				p.getKey().ready();
-			}
+		}
 		Machine.interrupt().restore(intStatus);
-
 	}
 
 	/**
@@ -71,8 +68,7 @@ public class Alarm {
 		waitmap.put(KThread.currentThread(), wakeTime);
 		for(Map.Entry<KThread, Long> entry : waitmap.entrySet()) {
         waitlist.add(entry);
-}
-
+    }
 		waitlist.sort( new Comparator<Map.Entry<KThread, Long>>() {
 
 			@Override
