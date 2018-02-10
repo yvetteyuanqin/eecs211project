@@ -453,19 +453,15 @@ public class KThread {
 	 */
 	public static void selfTest() {
 		Lib.debug(dbgThread, "Enter KThread.selfTest");
-
-		//new KThread(new PingTest(1)).setName("forked thread").fork();
-		//new PingTest(0).run();
-		
-		/*test Joinee*/
-		KThread joineeThread = new KThread(new Joinee()).setName("\t --Joinee thread");
-//		KThread joinerThread = new KThread(new Joiner(joineeThread)).setName("\t --Joiner thread");
-		System.out.println("\n--Case1: x joins y and x runs first--");
-//		joinerThread.fork();
-		joineeThread.fork();
-
-		
-		new Joiner(joineeThread).run();
+		long ticks;
+		Alarm test = new Alarm();
+		for (int i =0;i<5;i++)
+		{
+			ticks=(long)(Math.random()*1000000);
+			System.out.println("I'm about to wait for " + ticks + " ticks.");
+			test.waitUntil(ticks);
+			System.out.println(ticks + " ticks later, I'm done waiting!");
+		}
 	}
 
 	private static final char dbgThread = 't';
