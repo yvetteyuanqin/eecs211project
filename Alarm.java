@@ -1,16 +1,10 @@
 package nachos.threads;
 
-import java.awt.List;
-import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.SortedMap;
-import java.util.TreeMap;
-
 import nachos.machine.*;
 
 /**
