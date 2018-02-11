@@ -18,7 +18,7 @@ public class Communicator {
         listener=new Condition2(lock);
         speaker=new Condition2(lock);
     }
-    
+
     /**
      * Wait for a thread to listen through this communicator, and then transfer
      * <i>word</i> to the listener.
@@ -36,16 +36,12 @@ public class Communicator {
         if(listenercnt<1) {
             speaker.sleep();
         }else {
-            listener.wakeAll();
-            
+            listener.wake();
         }
-        if(speakercnt<1) {
-            listenercnt =0;
-        }
-        //this.word = word;
+        speakercnt--;
         lock.release();
     }
-    
+
     /**
      * Wait for a thread to speak through this communicator, and then return the
      * <i>word</i> that thread passed to <tt>speak()</tt>.
@@ -56,23 +52,16 @@ public class Communicator {
         lock.acquire();
         listenercnt++;
         if(speakercnt<1) {
-            
-            speaker.wake();
-            
+            listener.sleep();
         }else {
-            listener.wake();
-            listenercnt --;
-        }
-        
-        if(listenercnt <1) {
-            speakercnt --;
-            //System.out.println("wake speaker");
+            speaker.wake();
         }
         int data = this.word;
+        listenercnt --;
         lock.release();
         return data;
     }
-    
+
     private int listenercnt = 0;
     private int speakercnt = 0;
     private Condition2 speaker;
