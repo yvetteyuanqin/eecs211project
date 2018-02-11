@@ -10,64 +10,65 @@ import nachos.machine.*;
  * be paired off at this point.
  */
 public class Communicator {
-	/**
-	 * Allocate a new communicator.
-	 */
-	public Communicator() {
-    flag = false;
-		lock=new Lock();
-		listener=new Condition2(lock);
-		speaker=new Condition2(lock);
-	}
-
-	/**
-	 * Wait for a thread to listen through this communicator, and then transfer
-	 * <i>word</i> to the listener.
-	 *
-	 * <p>
-	 * Does not return until this thread is paired up with a listening thread.
-	 * Exactly one listener should receive <i>word</i>.
-	 *
-	 * @param word the integer to transfer.
-	 */
-	public void speak(int word) {
-		lock.acquire();
-		speakercnt++;
-		while(flag || listenercnt <1 ) {
-			speaker.sleep();
-		}
-    this.word = word;
-    flag = true;
-    listener.wake();
-		
-    speakercnt--;
-		lock.release();
-	}
-
-	/**
-	 * Wait for a thread to speak through this communicator, and then return the
-	 * <i>word</i> that thread passed to <tt>speak()</tt>.
-	 *
-	 * @return the integer transferred.
-	 */
-	public int listen() {
-		lock.acquire();
-		listenercnt++;
-		while(flag== false) {
-      speaker.wake();
-			listener.sleep();
-		}
-    int data = this.word;
-    flag = false;
-    listenercnt--;
-		lock.release();
-		return data;
-	}
-  private boolean flag;
-	private int listenercnt = 0;
-	private int speakercnt = 0;
-	private Condition2 speaker;
-	private Condition2 listener;
-	private Lock lock;
-	private int word;
+    /**
+     * Allocate a new communicator.
+     */
+    public Communicator() {
+        flag = false;
+        lock=new Lock();
+        listener=new Condition2(lock);
+        speaker=new Condition2(lock);
+    }
+    
+    /**
+     * Wait for a thread to listen through this communicator, and then transfer
+     * <i>word</i> to the listener.
+     *
+     * <p>
+     * Does not return until this thread is paired up with a listening thread.
+     * Exactly one listener should receive <i>word</i>.
+     *
+     * @param word the integer to transfer.
+     */
+    public void speak(int word) {
+        lock.acquire();
+        speakercnt++;
+        while(flag || listenercnt ==0 ) {
+            speaker.sleep();
+        }
+        this.word = word;
+        flag = true;
+        listener.wakeAll();
+        
+        speakercnt--;
+        lock.release();
+    }
+    
+    /**
+     * Wait for a thread to speak through this communicator, and then return the
+     * <i>word</i> that thread passed to <tt>speak()</tt>.
+     *
+     * @return the integer transferred.
+     */
+    public int listen() {
+        lock.acquire();
+        listenercnt++;
+        while(flag== false) {
+            speaker.wakeAll();
+            listener.sleep();
+        }
+        int data = this.word;
+        flag = false;
+        listenercnt--;
+        lock.release();
+        return data;
+    }
+    private boolean flag;
+    private int listenercnt = 0;
+    private int speakercnt = 0;
+    private Condition2 speaker;
+    private Condition2 listener;
+    private Lock lock;
+    private int word;
 }
+
