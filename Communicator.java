@@ -37,7 +37,10 @@ public class Communicator {
             speaker.sleep();
         }else {
             listener.wakeAll();
-            listenercnt = 0;
+            
+        }
+        if(speakercnt<1) {
+            listenercnt =0;
         }
         //this.word = word;
         lock.release();
@@ -53,14 +56,16 @@ public class Communicator {
         lock.acquire();
         listenercnt++;
         if(speakercnt<1) {
-            listener.sleep();
-        }else {
+            
             speaker.wake();
-            listener.wakeAll();
-            listenercnt = 0;
-            if(listenercnt <1) {
-                speakercnt --;
-            }
+            
+        }else {
+            listener.wake();
+            listenercnt --;
+        }
+        
+        if(listenercnt <1) {
+            speakercnt --;
             //System.out.println("wake speaker");
         }
         int data = this.word;
@@ -75,4 +80,3 @@ public class Communicator {
     private Lock lock;
     private int word;
 }
-
