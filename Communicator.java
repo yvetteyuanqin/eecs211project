@@ -18,7 +18,7 @@ public class Communicator {
         lock=new Lock();
         listener=new Condition2(lock);
         speaker=new Condition2(lock);
-        waiting = new Condition2(lock);
+        waitingQueue = new Condition2(lock);
         word = null;
     }
     
@@ -42,7 +42,7 @@ public class Communicator {
         //flag = true;
         listener.wake();
         
-        waiting.sleep();
+        waitingQueue.sleep();
         lock.release();
     }
     
@@ -62,7 +62,7 @@ public class Communicator {
         int data = word.intValue();
         word = null;
         //listenercnt--;
-        waiting.wake();
+        waitingQueue.wake();
         speaker.wake();
         lock.release();
         return data;
@@ -72,7 +72,7 @@ public class Communicator {
     //private int speakercnt = 0;
     private Condition2 speaker;
     private Condition2 listener;
-    private Condition2 waiting;
+    private Condition2 waitingQueue;
     private Lock lock;
     private Integer word;
 }
