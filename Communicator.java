@@ -14,10 +14,12 @@ public class Communicator {
      * Allocate a new communicator.
      */
     public Communicator() {
-        flag = false;
+        //flag = false;
         lock=new Lock();
         listener=new Condition2(lock);
         speaker=new Condition2(lock);
+        waiting = new Condition2(lock);
+        word = null;
     }
     
     /**
@@ -32,15 +34,15 @@ public class Communicator {
      */
     public void speak(int word) {
         lock.acquire();
-        speakercnt++;
-        while(flag || listenercnt ==0 ) {
+        //speakercnt++;
+        while( this.word != null) {
             speaker.sleep();
         }
         this.word = word;
-        flag = true;
-        listener.wakeAll();
+        //flag = true;
+        listener.wake();
         
-        speakercnt--;
+        waiting.sleep();
         lock.release();
     }
     
@@ -52,23 +54,26 @@ public class Communicator {
      */
     public int listen() {
         lock.acquire();
-        listenercnt++;
-        while(flag== false) {
-            speaker.wakeAll();
+        //listenercnt++;
+        while(word == null) {
+            //speaker.wakeAll();
             listener.sleep();
         }
-        int data = this.word;
-        flag = false;
-        listenercnt--;
+        int data = word.intValue();
+        word = null;
+        //listenercnt--;
+        waiting.wake();
+        speaker.wake();
         lock.release();
         return data;
     }
-    private boolean flag;
-    private int listenercnt = 0;
-    private int speakercnt = 0;
+    //private boolean flag;
+    //private int listenercnt = 0;
+    //private int speakercnt = 0;
     private Condition2 speaker;
     private Condition2 listener;
+    private Condition2 waiting;
     private Lock lock;
-    private int word;
+    private Integer word;
 }
 
