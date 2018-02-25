@@ -1,10 +1,6 @@
 package nachos.threads;
 
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Map.Entry;
+import java.util.*;
 import nachos.machine.*;
 
 /**
@@ -20,8 +16,8 @@ public class Alarm {
 	 * <b>Note</b>: Nachos will not function correctly with more than one alarm.
 	 */
 	public Alarm() {
-		waitmap = new HashMap<KThread, Long >();
-		waitlist = new LinkedList<Map.Entry<KThread, Long>>();
+
+		waitlist = new PriorityQueue<WaitThread>();
 
 		Machine.timer().setInterruptHandler(new Runnable() {
 			public void run() {
@@ -41,10 +37,10 @@ public class Alarm {
 
 		boolean intStatus = Machine.interrupt().disable();
 
-		while (!waitlist.isEmpty() && waitlist.getFirst().getValue() < Machine.timer().getTime()){
-        waitlist.getFirst().getKey().ready();
-				waitlist.removeFirst();
+		while (waitlist.peek()!=null && waitlist.peek().time <= Machine.timer().getTime()){
+        waitlist.poll().trd.ready();
 		}
+		KThread.yield();
 		Machine.interrupt().restore(intStatus);
 	}
 
@@ -64,24 +60,26 @@ public class Alarm {
 		// for now, cheat just to get something working (busy waiting is bad)
 		long wakeTime = Machine.timer().getTime() + x;
 
+		WaitThread trd = new WaitThread(KThread.currentThread(),wakeTime);
 		boolean intStatus = Machine.interrupt().disable();
-		waitmap.put(KThread.currentThread(), wakeTime);
-		for(Map.Entry<KThread, Long> entry : waitmap.entrySet()) {
-        waitlist.add(entry);
-    }
-		waitlist.sort( new Comparator<Map.Entry<KThread, Long>>() {
-
-			@Override
-			public int compare(Entry<KThread, Long> o1, Entry<KThread, Long> o2) {
-				// TODO Auto-generated method stub
-				return (o1.getValue()).compareTo( o2.getValue() ) ;
-			}
-	    });
+	  waitlist.add(trd);
 		KThread.sleep();
-
 		Machine.interrupt().restore(intStatus);
 
 	}
-	private Map<KThread, Long> waitmap;
-	private LinkedList<Map.Entry<KThread, Long>> waitlist;
+	private class WaitThread implements Comparable <WaitThread>{
+		KThread trd;
+		long time;
+		public WaitThread(KThread trd, long time){
+			this.trd = trd;
+			this.time = time;
+		}
+		public int compareTo(WaitThread trd){
+			if (this.time == trd.time) return 0;
+			else if(this.time < trd.time) return -1;
+			else return 1;
+		}
+	}
+
+	private PriorityQueue<WaitThread> waitlist;
 }
