@@ -147,14 +147,14 @@ public class PriorityScheduler extends Scheduler {
 		public KThread nextThread() {
 			Lib.assertTrue(Machine.interrupt().disabled());
 			// implement me
-			if(resource != null){
+			if (resource!=null){
 				resource.HoldingResources.remove(this);
 			}
 			ThreadState nextthreadstate = pickNextThread();
 			if(nextthreadstate != null){
 				nextthreadstate.acquire(this);
-				return nextthreadstate.thread;
-			}
+				 return nextthreadstate.thread;
+			 }
 			else return null;
 		}
 
@@ -176,29 +176,24 @@ public class PriorityScheduler extends Scheduler {
 			{
 				/*if(threadstate.getEffectivePriority() == maxpriority)
 				{
-					if(threadstate.age >= maxthread.age)
+					if(threadstate.age > maxthread.age)
 					{
 						maxthread = threadstate;
 						maxpriority = threadstate.getEffectivePriority();
 					}
-				}*/
-
+				}
+				*/
 				if(threadstate.getEffectivePriority() > maxpriority)
 				{
 					maxthread = threadstate;
 					maxpriority = threadstate.getEffectivePriority();
 				}
-				if (maxpriority == priorityMaximum)
-						break;
 			}
 
 			//waitQueue.remove(maxthread);
 			return maxthread;
 
 		}
-		public  boolean isempty() {
-	          return (this.waitQueue.size() == 0);
-	     }
 
 		public void print() {
 			Lib.assertTrue(Machine.interrupt().disabled());
@@ -252,16 +247,16 @@ public class PriorityScheduler extends Scheduler {
 		public int getEffectivePriority() {
 			// implement me
 			int effectivePriority = this.priority;
-      for(PriorityQueue queue : this.HoldingResources) {
-          if(queue.transferPriority && !queue.isempty()) {
-              if(effectivePriority < queue.pickNextThread().getEffectivePriority()) {
+	    for(PriorityQueue queue : this.HoldingResources) {
+	            if(queue.transferPriority && (queue.waitQueue.size()!=0)) {
+	              if(effectivePriority < queue.pickNextThread().getEffectivePriority()) {
 	                effectivePriority = queue.pickNextThread().getEffectivePriority();
-	             }
-	           }
-	         }
-	    return effectivePriority;
-		}
+	              }
+	            }
+	          }
+	          return effectivePriority;
 
+		}
 
 		/**
 		 * Set the priority of the associated thread to the specified value.
@@ -297,9 +292,9 @@ public class PriorityScheduler extends Scheduler {
 						else Resource.effectivePriority = max;
 						Resource.ChangePriority();
 					}
-
-		}
 */
+		//}
+
 		/**
 		 * Called when <tt>waitForAccess(thread)</tt> (where <tt>thread</tt> is
 		 * the associated thread) is invoked on the specified priority queue.
@@ -315,8 +310,7 @@ public class PriorityScheduler extends Scheduler {
 		public void waitForAccess(PriorityQueue waitQueue) {
 			// implement me
 			waitQueue.waitQueue.add(this);
-/*
-			if(waitQueue.transferPriority==true)
+			/*if(waitQueue.transferPriority==true)
 			{
 				HoldingResources.add(waitQueue);
 				if(waitQueue.resource != null)
@@ -326,7 +320,7 @@ public class PriorityScheduler extends Scheduler {
 				}
 
 			}
-*/
+			*/
 		}
 
 		/**
@@ -354,7 +348,7 @@ public class PriorityScheduler extends Scheduler {
 		protected int priority;
 
 		//protected int effectivePriority = priorityDefault;
-		//protected long age = Machine.timer().getTime();
+		protected long age = Machine.timer().getTime();
 		protected LinkedList<PriorityQueue> HoldingResources = new LinkedList<PriorityQueue>();
 		//protected LinkedList<ThreadState> waitingthreadstates = new LinkedList<ThreadState>();
 
